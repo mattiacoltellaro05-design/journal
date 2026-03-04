@@ -16,7 +16,6 @@
         \"display\": \"standalone\"
     }">
     <style>
-        /* [TUTTO IL CSS IDENTICO AL TUO ORIGINALE - non modificato] */
         :root {
             --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             --container-bg: rgba(255, 255, 255, 0.95);
@@ -71,7 +70,7 @@
         .cocktail-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px var(--shadow); border-color: var(--accent); }
         .cocktail-image { width: 100%; height: 120px; border-radius: 16px; background: #f8f9fa; display: flex; align-items: center; justify-content: center; font-size: 48px; margin-bottom: 12px; }
         .cocktail-name { font-weight: 600; font-size: 16px; margin-bottom: 8px; color: var(--text-primary); }
-        .cocktail-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .cocktail-meta { display:  flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .rating { color: #fbbf24; font-size: 14px; }
         .tweak-badge { background: var(--success-bg); color: #065f46; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
@@ -83,8 +82,11 @@
         .form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
         .form-textarea { resize: vertical; min-height: 120px; }
         .rating-stars { display: flex; gap: 4px; margin-bottom: 8px; }
-        .star { width: 28px; height: 28px; cursor: pointer; opacity: 0.4; fill: currentColor; }
+        .star { width: 28px; height: 28px; cursor: pointer; opacity: 0.4; fill: currentColor; transition: all 0.2s ease; }
         .star.filled { opacity: 1; fill: #fbbf24; }
+        .modal-buttons { display: flex; gap: 12px; }
+        .btn-primary { flex: 1; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 16px; font-weight: 600; cursor: pointer; }
+        .btn-secondary { flex: 1; padding: 16px; background: var(--input-bg); border: 2px solid var(--input-border); border-radius: 16px; color: var(--text-primary); font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -133,7 +135,7 @@
 
             init() {
                 this.initTheme();
-                this.bindEvents();
+                this.bindStaticEvents();
                 this.render();
             }
 
@@ -142,7 +144,8 @@
                 document.documentElement.setAttribute('data-theme', savedTheme);
             }
 
-            bindEvents() {
+            bindStaticEvents() {
+                // Tabs
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', () => {
                         document.querySelector('.tab.active').classList.remove('active');
@@ -152,37 +155,45 @@
                     });
                 });
 
+                // Search
                 document.querySelector('.search-input').addEventListener('input', (e) => this.render(e.target.value));
+
+                // Add button
                 document.querySelector('.add-btn').addEventListener('click', () => {
                     this.currentEditingId = null;
                     this.showAddModal();
                 });
-                document.getElementById('modalOverlay').addEventListener('click', (e) => {
-                    if (e.target.id === 'modalOverlay') this.hideModal();
-                });
+
+                // Theme toggle
                 document.getElementById('themeToggle').addEventListener('click', () => {
                     const current = document.documentElement.getAttribute('data-theme');
                     const next = current === 'dark' ? 'light' : 'dark';
                     document.documentElement.setAttribute('data-theme', next);
                     localStorage.setItem('theme', next);
                 });
+
+                // Modal overlay
+                document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                    if (e.target.id === 'modalOverlay') this.hideModal();
+                });
             }
 
             showAddModal() {
-                // ✅ CORRETTO: this.cocktails (non this.c Cocktails)
                 const editingCocktail = this.currentEditingId ? 
                     this.cocktails.find(c => c.id === this.currentEditingId) : null;
                 
                 document.getElementById('modalContent').innerHTML = this.getEditFormHTML(editingCocktail);
                 document.getElementById('modalOverlay').classList.add('show');
-                this.bindFormEvents(editingCocktail);
+                
+                // Bind eventi form DOPO aver inserito l'HTML
+                setTimeout(() => this.bindFormEvents(editingCocktail), 0);
             }
 
             getEditFormHTML(cocktail) {
                 const isEditing = !!cocktail;
                 return `
                     <div style="padding: 32px 24px 24px;">
-                        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">${isEditing ? `✏️ Modifica ${cocktail.name}` : 'Nuovo Drink'}</h2>
+                        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">${isEditing ? `✏️ Modifica ${cocktail.name}` : '🍹 Nuovo Drink'}</h2>
                         <form id="cocktailForm">
                             <input type="hidden" name="id" value="${cocktail?.id || ''}">
                             <div class="form-group">
@@ -198,7 +209,7 @@
                                 <input type="text" class="form-input" name="category" value="${cocktail?.category || ''}">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Rating</label>
+                                <label class="form-label">⭐ Rating</label>
                                 <div class="rating-stars" id="ratingStars">
                                     ${'<svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'.repeat(5)}
                                 </div>
@@ -208,11 +219,9 @@
                                 <label class="form-label">📝 Note (tutto salvato)</label>
                                 <textarea class="form-textarea" name="notes">${cocktail?.notes || ''}</textarea>
                             </div>
-                            <div style="display: flex; gap: 12px;">
-                                <button type="submit" style="flex: 1; padding: 16px; background: var(--accent); color: white; border: none; border-radius: 16px; font-weight: 600;">
-                                    ${isEditing ? '💾 Aggiorna' : 'Salva'}
-                                </button>
-                                <button type="button" id="cancelBtn" style="flex: 1; padding: 16px; background: var(--input-bg); border: 2px solid var(--input-border); border-radius: 16px; color: var(--text-primary);">Annulla</button>
+                            <div class="modal-buttons">
+                                <button type="submit" class="btn-primary">${isEditing ? '💾 Aggiorna' : 'Salva'}</button>
+                                <button type="button" id="cancelBtn" class="btn-secondary">Annulla</button>
                             </div>
                         </form>
                     </div>
@@ -223,17 +232,23 @@
                 const form = document.getElementById('cocktailForm');
                 const stars = document.querySelectorAll('#ratingStars .star');
                 const ratingInput = document.querySelector('input[name="rating"]');
+                const cancelBtn = document.getElementById('cancelBtn');
 
-                stars.forEach((star, i) => star.classList.toggle('filled', i < (parseInt(ratingInput.value) || 0)));
+                // Inizializza rating stars
+                const rating = parseInt(ratingInput.value) || 0;
+                stars.forEach((star, i) => star.classList.toggle('filled', i < rating));
+
+                // Rating stars click
                 stars.forEach((star, index) => {
                     star.addEventListener('click', () => {
-                        const rating = index + 1;
-                        ratingInput.value = rating;
-                        stars.forEach((s, i) => s.classList.toggle('filled', i < rating));
+                        const newRating = index + 1;
+                        ratingInput.value = newRating;
+                        stars.forEach((s, i) => s.classList.toggle('filled', i < newRating));
                     });
                 });
 
-                form.addEventListener('submit', (e) => {
+                // Form submit
+                const handleSubmit = (e) => {
                     e.preventDefault();
                     const formData = new FormData(form);
                     const shakeTime = formData.get('shakeTime')?.trim();
@@ -244,9 +259,15 @@
                     }
                     formData.set('notes', notes);
                     this.saveCocktail(formData);
-                });
+                };
 
-                document.getElementById('cancelBtn').addEventListener('click', () => this.hideModal());
+                form.removeEventListener('submit', handleSubmit);
+                form.addEventListener('submit', handleSubmit);
+
+                // Cancel button
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', () => this.hideModal());
+                }
             }
 
             saveCocktail(formData) {
@@ -255,7 +276,7 @@
                     id: id || Date.now().toString(),
                     name: formData.get('name'),
                     category: formData.get('category') || '',
-                    rating: parseInt(formData.get('rating')),
+                    rating: parseInt(formData.get('rating')) || 0,
                     notes: formData.get('notes'),
                     shakeTime: formData.get('shakeTime') || '',
                     tweaks: (formData.get('notes') || '').split('\n').filter(t => t.trim()).length,
@@ -282,7 +303,7 @@
             render(searchTerm = '') {
                 const container = document.getElementById('cocktailGrid');
                 if (this.currentTab === 'stats') {
-                    container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-secondary);">Stats in arrivo...</div>';
+                    container.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-secondary);">📊 Stats in arrivo...</div>';
                     return;
                 }
 
@@ -295,8 +316,8 @@
                         <div class="cocktail-image">📸</div>
                         <div class="cocktail-name">${cocktail.name}</div>
                         <div class="cocktail-meta">
-                            <div class="rating">${'★'.repeat(cocktail.rating)}${'☆'.repeat(5 - cocktail.rating)}</div>
-                            <span class="tweak-badge">${cocktail.tweaks} tweaks</span>
+                            <div class="rating">${'★'.repeat(cocktail.rating || 0)}${'☆'.repeat(5 - (cocktail.rating || 0))}</div>
+                            <span class="tweak-badge">${cocktail.tweaks || 0} tweaks</span>
                         </div>
                         <div style="color: var(--text-secondary); font-size: 14px;">
                             ${new Date(cocktail.date).toLocaleDateString('it-IT')}
@@ -305,15 +326,23 @@
                     </div>
                 `).join('');
 
-                document.querySelectorAll('.cocktail-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        this.currentEditingId = card.dataset.id;
-                        this.showAddModal();
+                // Bind dinamico per le cards
+                setTimeout(() => {
+                    document.querySelectorAll('.cocktail-card').forEach(card => {
+                        // Rimuovi listener precedente
+                        const newCard = card.cloneNode(true);
+                        card.parentNode.replaceChild(newCard, card);
+                        
+                        newCard.addEventListener('click', () => {
+                            this.currentEditingId = newCard.dataset.id;
+                            this.showAddModal();
+                        });
                     });
-                });
+                }, 10);
             }
         }
 
+        // Inizializza l'app
         new MintJournal();
     </script>
 </body>
