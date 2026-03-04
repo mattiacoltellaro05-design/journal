@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mint Journal - Personal Cocktail Journal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #a8b5a2 0%, #85996e 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .status {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .tab.active {
+            background: white;
+            color: #85996e;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 3px;
+            background: #85996e;
+            border-radius: 2px;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 48px;
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #85996e;
+            box-shadow: 0 0 0 4px rgba(133, 153, 110, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            opacity: 0.5;
+        }
+
+        .add-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #a8b5a2 0%, #85996e 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 24px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(133, 153, 110, 0.3);
+        }
+
+        .cocktail-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .cocktail-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #f1f3f4;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            animation: slideInUp 0.5s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .cocktail-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: #85996e;
+        }
+
+        .cocktail-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .cocktail-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .cocktail-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #f4b400;
+        }
+
+        .tweak-badge {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #85996e;
+        }
+
+        .photo-upload {
+            border: 2px dashed #d1d5db;
+            border-radius: 16px;
+            padding: 48px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+        }
+
+        .photo-upload:hover {
+            border-color: #85996e;
+            background: #f8fcf8;
+        }
+
+        .photo-upload.dragover {
+            border-color: #85996e;
+            background: #f0f8f0;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 4px;
+        }
+
+        .star {
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .star.filled {
+            fill: #f4b400;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #85996e 0%, #a8b5a2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 24px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .container { border-radius: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mint Journal</h1>
+            <div class="status">
+                <span>📸 Offline</span>
+                <span>💚 Categoria</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="journal">Journal</div>
+            <div class="tab" data-tab="stats">Stats</div>
+        </div>
+
+        <div class="content">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+                <input type="text" class="search-input" placeholder="Cerca un drink...">
+            </div>
+
+            <button class="add-btn">+ Nuovo drink</button>
+
+            <div class="cocktail-grid" id="cocktailGrid">
+                <!-- Cards generate dinamicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay per modali -->
+    <div class="overlay" id="modalOverlay">
+        <div class="modal" id="modalContent">
+            <!-- Contenuto modale dinamico -->
+        </div>
+    </div>
+
+    <script>
+        class MintJournal {
+            constructor() {
+                this.cocktails = JSON.parse(localStorage.getItem('mintJournal')) || [];
+                this.currentTab = 'journal';
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+                this.animateCards();
+            }
+
+            bindEvents() {
+                // Tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelector('.tab.active').classList.remove('active');
+                        tab.classList.add('active');
+                        this.currentTab = tab.dataset.tab;
+                        this.render();
+                    });
+                });
+
+                // Search
+                document.querySelector('.search-input').addEventListener('input', (e) => {
+                    this.render(e.target.value);
+                });
+
+                // Add button
+                document.querySelector('.add-btn').addEventListener('click', () => {
+                    this.showAddModal();
+                });
+
+                // Modal overlay
+                document.getElementById('modalOverlay').addEventListener('click', (e) => {
+                    if (e.target.id === 'modalOverlay') this.hideModal();
+                });
+
+                // Drag & drop per foto
+                const uploadArea = document.querySelector('.photo-upload');
+                if (uploadArea) {
+                    uploadArea.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        uploadArea.classList.add('dragover');
+                    });
+                    uploadArea.addEventListener('dragleave', () => {
+                        uploadArea.classList.remove('dragover');
+                    });
+                    uploadArea.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        uploadArea.classList.remove('dragover');
+                        this.handleImageUpload(e.dataTransfer.files[0]);
+                    });
+                }
+            }
+
+            render(searchTerm = '') {
+                const container = document.getElementById('cocktailGrid');
+                
+                if (this.currentTab === 'stats') {
+                    container.innerHTML = this.renderStats();
+                    return;
+                }
+
+                const filtered = this.cocktails
+                    .filter(c => 
+                        !searchTerm || 
+                        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        c.notes.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                container.innerHTML = filtered.map((cocktail, index) => `
+                    <div class="cocktail-card" data-id="${cocktail.id}">
+                        <div class="cocktail-image" style="background-image: ${cocktail.image ? `url(${cocktail.image})` : ''}">
+                            ${cocktail.image ? '' : '📸 No photo'}
+                        </div>
+                        <div class="cocktail-name">${cocktail.name}</div>
+                        <div class="cocktail-meta">
+                            <div class="rating">
+                                ${'★'.repeat(cocktail.rating)}${'☆'.repeat(5 - cocktail.rating)}
+                            </div>
+                            <span class="tweak-badge">${cocktail.tweaks} tweaks</span>
+                        </div>
+                        <div style="color: #666; font-size: 14px;">${new Date(cocktail.date).toLocaleDateString('it-IT')}</div>
+                    </div>
+                `).join('');
+
+                // Bind card clicks
+                document.querySelectorAll('.cocktail-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const id = card.dataset.id;
+                        this.showCocktailModal(id);
+                    });
+                });
+
+                this.animateCards();
+            }
+
+            renderStats() {
+                const total = this.cocktails.length;
+                const avgRating = total ? (this.cocktails.reduce((sum, c) => sum + c.rating, 0) / total).toFixed(1) : 0;
+                const topCategory = this.getTopCategory();
+
+                return `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">${total}</div>
+                            <div>Drink provati</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${avgRating}/5</div>
+                            <div>Media rating</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${topCategory.count}</div>
+                            <div>Top categoria</div>
+                            <div style="font-size: 12px; opacity: 0.9;">${topCategory.name}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${this.cocktails.length ? this.cocktails[0].tweaks : 0}</div>
+                            <div>Più tweakato</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTopCategory() {
+                const categories = {};
+                this.cocktails.forEach(c => {
+                    categories[c.category] = (categories[c.category] || 0) + 1;
+                });
+                return Object.entries(categories)
+                    .sort((a, b) => b[1] - a[1])[0] || {name: 'Nessuna', count: 0};
+            }
+
+            showAddModal() {
+                const modal = document.getElementById('modalContent');
+                modal.innerHTML = this.getAddFormHTML();
+                document.getElementById('modalOverlay').classList.add('show');
+                this.bindFormEvents();
+            }
+
+            getAddFormHTML() {
+                return `
+                    <div style="padding: 32px 24px 24px;">
+                        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px; color: #1a1a1a;">Nuovo Drink</h2>
+                        
+                        <form id="cocktailForm">
+                            <div class="form-group">
+                                <label class="form-label">Nome drink</label>
+                                <input type="text" class="form-input" name="name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Categoria</label>
+                                <input type="text" class="form-input" name="category" placeholder="es. Negroni-like">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Foto</label>
+                                <div class="photo-upload">📸<br><br>Trascina foto o clicca<br>Max 5MB</div>
+                                <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Rating</label>
+                                <div class="rating-stars" id="ratingStars">
+                                    ${'<svg class="star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'.repeat(5)}
+                                </div>
+                                <input type="hidden" name="rating" value="0">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Tweaks (modifiche)</label>
+                                <textarea class="form-textarea" name="notes" rows="4" placeholder="es. +10ml Campari, -5ml vermouth, shakerato 12s..."></textarea>
+                            </div>
+                            
+                            <div style="display: flex; gap: 12px;">
+                                <button type="submit" style="flex: 1; padding: 16px; background: #85996e; color: white; border: none; border-radius: 16px; font-weight: 600;">Salva</button>
+                                <button type="button" id="cancelBtn" style="flex: 1; padding: 16px; background: #f1f3f4; border: 2px solid #e9ecef; border-radius: 16px; font-weight: 600;">Cancella</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            }
+
+            bindFormEvents() {
+                const form = document.getElementById('cocktailForm');
+                const photoInput = document.getElementById('photoInput');
+                const uploadArea = document.querySelector('.photo-upload');
+                const stars = document.querySelectorAll('#ratingStars .star');
+                const ratingInput = document.querySelector('input[name="rating"]');
+
+                // Photo upload
+                uploadArea.addEventListener('click', () => photoInput.click());
+                photoInput.addEventListener('change', (e) => this.handleImageUpload(e.target.files[0]));
+
+                // Rating stars
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', () => {
+                        const rating = index + 1;
+                        ratingInput.value = rating;
+                        stars.forEach((s, i) => {
+                            s.classList.toggle('filled', i < rating);
+                        });
+                    });
+                });
+
+                // Form submit
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveCocktail(new FormData(form));
+                });
+
+                // Cancel
+                document.getElementById('cancelBtn').addEventListener('click', () => this.hideModal());
+            }
+
+            handleImageUpload(file) {
+                if (!file || !file.type.startsWith('image/')) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width: 100%; height: 160px; object-fit: cover; border-radius: 16px;';
+                    document.querySelector('.photo-upload').innerHTML = '';
+                    document.querySelector('.photo-upload').appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            saveCocktail(formData) {
+                const cocktail = {
+                    id: Date.now().toString(),
+                    name: formData.get('name'),
+                    category: formData.get('category') || '',
+                    rating: parseInt(formData.get('rating')),
+                    notes: formData.get('notes'),
+                    tweaks: formData.get('notes').split(',').length,
+                    date: new Date().toISOString(),
+                    image: '' // Implementa upload reale se necessario
+                };
+
+                this.cocktails.unshift(cocktail);
+                localStorage.setItem('mintJournal', JSON.stringify(this.cocktails));
+                this.hideModal();
+                this.render();
+            }
+
+            showCocktailModal(id) {
+                const cocktail = this.cocktails.find(c => c.id === id);
+                if (!cocktail) return;
+
+                document.getElementById('modalContent').innerHTML = `
+                    <div style="padding: 32px 24px 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="font-size: 24px; font-weight: 600;">${cocktail.name}</h2>
+                            <div class="rating">${'★'.repeat(cocktail.rating)}${'☆'.repeat(5 - cocktail.rating)}</div>
+                        </div>
+                        <div class="cocktail-image" style="background-image: ${cocktail.image ? `url(${cocktail.image})` : ''}; margin-bottom: 20px;">
+                            ${cocktail.image ? '' : '📸 No photo'}
+                        </div>
+                        <div><strong>Categoria:</strong> ${cocktail.category}</div>
+                        <div style="margin-top: 16px;"><strong>Note:</strong></div>
+                        <div style="background: #f8f9fa; padding: 16px; border-radius: 12px; white-space: pre-wrap;">${cocktail.notes}</div>
+                        <div style="margin-top: 20px; font-size: 12px; color: #666;">${new Date(cocktail.date).toLocaleString('it-IT')}</div>
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button onclick="journal.editCocktail('${cocktail.id}')" style="flex: 1; padding: 12px; background: #85996e; color: white; border: none; border-radius: 12px;">Modifica</button>
+                            <button onclick="journal.deleteCocktail('${cocktail.id}')" style="flex: 1; padding: 12px; background: #fee; color: #c33; border: 2px solid #fcc; border-radius: 12px;">Elimina</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('modalOverlay').classList.add('show');
+            }
+
+            editCocktail(id) {
+                // Implementa modifica (riapre form precompilato)
+                this.hideModal();
+                setTimeout(() => this.showAddModal(), 100);
+            }
+
+            deleteCocktail(id) {
+                if (confirm('Eliminare questo drink?')) {
+                    this.cocktails = this.cocktails.filter(c => c.id !== id);
+                    localStorage.setItem('mintJournal', JSON.stringify(this.cocktails));
+                    this.hideModal();
+                    this.render();
+                }
+            }
+
+            hideModal() {
+                document.getElementById('modalOverlay').classList.remove('show');
+            }
+
+            animateCards() {
+                const cards = document.querySelectorAll('.cocktail-card');
+                cards.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.1}s`;
+                });
+            }
+        }
+
+        // Init app
+        const journal = new MintJournal();
+        window.journal = journal;
+    </script>
+</body>
+</html>
